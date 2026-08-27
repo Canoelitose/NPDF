@@ -167,11 +167,16 @@ jobs:
           echo "NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
 
       - run: npm ci
-      - name: PDFium fuer alle Android-Architekturen laden
-        run: node scripts/fetch-pdfium.mjs android-arm64 android-arm android-x64
 
+      # Order matters here. The Android libraries live inside
+      # src-tauri/gen/android, which is exactly the directory `android init`
+      # wants to create. Fetching first leaves a half built project behind and
+      # init then refuses with "Project directory ... does not exist".
       - name: Android-Projekt erzeugen
         run: npm run tauri -- android init --ci
+
+      - name: PDFium fuer alle Android-Architekturen laden
+        run: node scripts/fetch-pdfium.mjs android-arm64 android-arm android-x64
 
       - name: APK bauen
         run: npm run tauri -- android build --apk --debug
