@@ -1,5 +1,18 @@
 # Plattformen, Konten und Zertifikate
 
+## Laeufer in der CI
+
+Das Repository ist oeffentlich. Damit sind die von GitHub gehosteten Laeufer
+unbegrenzt kostenlos, auch die macOS-Laeufer und ohne den sonst ueblichen
+Faktor zehn auf die Minuten. Fuer den Bau der DMG ist das die einzige
+Voraussetzung, denn ein Apple-Abbild kann nur auf macOS entstehen.
+
+Solltest du das Repository je wieder auf privat stellen: dann gilt fuer den
+kostenlosen Tarif ein Kontingent von 2000 Minuten im Monat, macOS zaehlt
+zehnfach und Windows doppelt. Ist es aufgebraucht oder steht das Ausgabenlimit
+auf null, scheitern alle Jobs sofort, ohne Laeufer, ohne Protokoll und ohne
+Fehlertext.
+
 ## Was du brauchst
 
 Du hast angegeben, dass du noch keine Konten hast. Die CI baut deshalb alles
