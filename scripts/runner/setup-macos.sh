@@ -19,8 +19,8 @@ set -euo pipefail
 
 REPO_URL="https://github.com/Canoelitose/NPDF"
 TOKEN="${1:-}"
-RUNNER_NAME="${2:-$(scutil --get ComputerName 2>/dev/null || hostname)}"
-RUNNER_HOME="${HOME}/actions-runner"
+RUNNER_NAME="${2:-npdf-mac}"
+RUNNER_HOME="${HOME}/actions-runner-npdf"
 
 if [[ -z "$TOKEN" ]]; then
   echo "Kein Token angegeben." >&2
@@ -69,7 +69,7 @@ fi
 
 echo "==> Anmelden"
 ./config.sh --url "$REPO_URL" --token "$TOKEN" --name "$RUNNER_NAME" \
-  --labels self-hosted,macOS,"$ARCH",npdf \
+  --labels self-hosted,macOS,"$ARCH",npdf,npdf-mac \
   --work _work --unattended --replace
 
 echo "==> Als Dienst einrichten"
@@ -79,3 +79,4 @@ echo "==> Als Dienst einrichten"
 
 echo
 echo "Fertig. Der Runner sollte unter ${REPO_URL}/settings/actions/runners als Idle stehen."
+echo "Zum Einschalten die Repository-Variable MACOS_RUNNER auf ${RUNNER_NAME} setzen."

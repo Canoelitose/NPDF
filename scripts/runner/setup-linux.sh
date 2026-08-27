@@ -19,9 +19,9 @@ set -euo pipefail
 
 REPO_URL="https://github.com/Canoelitose/NPDF"
 TOKEN="${1:-}"
-RUNNER_NAME="${2:-$(hostname)}"
+RUNNER_NAME="${2:-npdf-linux}"
 RUNNER_USER="actions"
-RUNNER_HOME="/home/${RUNNER_USER}/actions-runner"
+RUNNER_HOME="/home/${RUNNER_USER}/actions-runner-npdf"
 
 if [[ -z "$TOKEN" ]]; then
   echo "Kein Token angegeben." >&2
@@ -41,6 +41,7 @@ apt-get install -y -qq \
   curl git jq tar build-essential pkg-config \
   libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libssl-dev \
   libappindicator3-dev patchelf xdg-utils file desktop-file-utils
+apt-get install -y -qq libfuse2 || apt-get install -y -qq libfuse2t64
 
 echo "==> Node 22"
 if ! command -v node >/dev/null || [[ "$(node -v | cut -c2-3)" -lt 22 ]]; then
@@ -64,16 +65,16 @@ echo "==> Runner herunterladen, jeweils die aktuelle Ausgabe"
 VERSION="$(curl -fsSL https://api.github.com/repos/actions/runner/releases/latest | jq -r .tag_name | sed 's/^v//')"
 ARCHIVE="actions-runner-linux-x64-${VERSION}.tar.gz"
 echo "    Version ${VERSION}"
-su - "$RUNNER_USER" -c "cd ~/actions-runner && \
+su - "$RUNNER_USER" -c "cd ~/actions-runner-npdf && \
   curl -fsSL -o '${ARCHIVE}' 'https://github.com/actions/runner/releases/download/v${VERSION}/${ARCHIVE}' && \
   tar xzf '${ARCHIVE}' && rm -f '${ARCHIVE}'"
 
 echo "==> Anmelden"
-su - "$RUNNER_USER" -c "cd ~/actions-runner && ./config.sh \
+su - "$RUNNER_USER" -c "cd ~/actions-runner-npdf && ./config.sh \
   --url '${REPO_URL}' \
   --token '${TOKEN}' \
   --name '${RUNNER_NAME}' \
-  --labels self-hosted,Linux,X64,npdf \
+  --labels self-hosted,Linux,X64,npdf,npdf-linux \
   --work _work --unattended --replace"
 
 echo "==> Als Dienst einrichten"
@@ -85,3 +86,4 @@ cd "$RUNNER_HOME"
 
 echo
 echo "Fertig. Der Runner sollte unter ${REPO_URL}/settings/actions/runners als Idle stehen."
+echo "Zum Einschalten die Repository-Variable LINUX_RUNNER auf ${RUNNER_NAME} setzen."

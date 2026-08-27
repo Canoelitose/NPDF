@@ -31,7 +31,7 @@ env:
 jobs:
   version:
     name: Version bestimmen
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.LINUX_RUNNER || 'ubuntu-latest' }}
     outputs:
       tag: ${{ steps.pick.outputs.tag }}
     steps:
@@ -53,20 +53,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
+          - os: ${{ vars.MACOS_RUNNER || 'macos-latest' }}
             label: macOS, DMG
             # One disk image that runs on Apple silicon and on Intel.
             target: universal-apple-darwin
             rust_targets: aarch64-apple-darwin,x86_64-apple-darwin
             pdfium: macos-universal
             bundles: dmg
-          - os: windows-latest
+          - os: ${{ vars.WINDOWS_RUNNER || 'windows-latest' }}
             label: Windows, MSI und NSIS
             target: ""
             rust_targets: ""
             pdfium: windows-x64
             bundles: msi,nsis
-          - os: ubuntu-latest
+          - os: ${{ vars.LINUX_RUNNER || 'ubuntu-latest' }}
             label: Linux, AppImage und DEB
             target: ""
             rust_targets: ""
@@ -89,8 +89,15 @@ jobs:
           node-version: 22
           cache: npm
 
+      # A Mac that falls asleep mid build takes the runner with it, and the job
+      # then dies without a log. `-w $PPID` ties the wakelock to the runner
+      # process, so it ends when the job ends, however it ends.
+      - name: Den Mac wach halten, solange er baut
+        if: matrix.pdfium == 'macos-universal'
+        run: caffeinate -dimsu -w $PPID &
+
       - name: Systemabhaengigkeiten, nur Linux
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.pdfium == 'linux-x64' && runner.environment == 'github-hosted'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev \

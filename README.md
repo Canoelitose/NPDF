@@ -85,6 +85,7 @@ CI.
 * `docs/architecture.md`, warum das Original nie angefasst wird
 * `docs/dependencies.md`, jede Abhaengigkeit mit Lizenz und Mobiltauglichkeit
 * `docs/platforms.md`, Konten, Zertifikate und was pro Plattform anders ist
+* `docs/eigener-bau-rechner.md`, auf eigenen Maschinen bauen statt auf GitHubs
 * `docs/milestones/M0.md`, was fertig ist und was offen bleibt
 
 ## Lizenz

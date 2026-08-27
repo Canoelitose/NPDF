@@ -14,8 +14,8 @@
 
 param(
   [Parameter(Mandatory = $true)][string]$Token,
-  [string]$Name = $env:COMPUTERNAME,
-  [string]$Path = "C:\actions-runner"
+  [string]$Name = "npdf-win",
+  [string]$Path = "C:\a-npdf"
 )
 
 $ErrorActionPreference = "Stop"
@@ -45,6 +45,15 @@ foreach ($p in $packages) {
   winget install --id $($p.Id) --silent --accept-source-agreements --accept-package-agreements | Out-Null
 }
 
+Write-Host "==> Lange Pfade und Defender"
+# Rust and node_modules go deeper than the old 260 character limit, and
+# Defender scanning every one of the tens of thousands of small files Rust
+# writes costs a multiple of the build itself.
+git config --system core.longpaths true 2>$null
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" `
+  -Name "LongPathsEnabled" -Value 1 -PropertyType DWord -Force | Out-Null
+Add-MpPreference -ExclusionPath $Path -ErrorAction SilentlyContinue
+
 Write-Host "==> Runner herunterladen, jeweils die aktuelle Ausgabe"
 New-Item -ItemType Directory -Force -Path $Path | Out-Null
 Set-Location $Path
@@ -62,9 +71,10 @@ Write-Host "==> Anmelden und als Dienst einrichten"
 # On Windows the runner may configure itself with administrator rights, and
 # --runasservice installs the Windows service in the same step.
 .\config.cmd --url $RepoUrl --token $Token --name $Name `
-  --labels self-hosted,Windows,X64,npdf `
+  --labels self-hosted,Windows,X64,npdf,npdf-win `
   --work _work --unattended --replace --runasservice
 
 Write-Host ""
 Write-Host "Fertig. Der Runner sollte unter $RepoUrl/settings/actions/runners als Idle stehen."
+Write-Host "Zum Einschalten die Repository-Variable WINDOWS_RUNNER auf $Name setzen."
 Write-Host "Neue Konsole oeffnen, damit rustup und node im Pfad sind."

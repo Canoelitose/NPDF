@@ -20,7 +20,7 @@ env:
 jobs:
   core:
     name: Kern, plattformunabhaengig
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.LINUX_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
@@ -54,7 +54,7 @@ jobs:
 
   frontend:
     name: Frontend
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.LINUX_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -73,15 +73,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ${{ vars.LINUX_RUNNER || 'ubuntu-latest' }}
             label: Linux
             pdfium: linux-x64
             bundles: deb,appimage
-          - os: macos-latest
+          - os: ${{ vars.MACOS_RUNNER || 'macos-latest' }}
             label: macOS
             pdfium: macos-arm64
             bundles: dmg,app
-          - os: windows-latest
+          - os: ${{ vars.WINDOWS_RUNNER || 'windows-latest' }}
             label: Windows
             pdfium: windows-x64
             bundles: msi,nsis
@@ -96,8 +96,15 @@ jobs:
           node-version: 22
           cache: npm
 
+      # A Mac that falls asleep mid build takes the runner with it, and the job
+      # then dies without a log. `-w $PPID` ties the wakelock to the runner
+      # process, so it ends when the job ends, however it ends.
+      - name: Den Mac wach halten, solange er baut
+        if: matrix.label == 'macOS'
+        run: caffeinate -dimsu -w $PPID &
+
       - name: Systemabhaengigkeiten, nur Linux
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.label == 'Linux' && runner.environment == 'github-hosted'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev \
@@ -114,7 +121,7 @@ jobs:
       # here, switched off, so that adding the secrets is the only thing left to
       # do. See docs/platforms.md.
       - name: Signieren, macOS
-        if: matrix.os == 'macos-latest' && vars.ENABLE_SIGNING == 'true'
+        if: matrix.label == 'macOS' && vars.ENABLE_SIGNING == 'true'
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -125,7 +132,7 @@ jobs:
         run: npm run tauri -- build --bundles dmg
 
       - name: Signieren, Windows
-        if: matrix.os == 'windows-latest' && vars.ENABLE_SIGNING == 'true'
+        if: matrix.label == 'Windows' && vars.ENABLE_SIGNING == 'true'
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.WINDOWS_CERTIFICATE }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
@@ -142,7 +149,7 @@ jobs:
   android:
     name: Android
     needs: [core, frontend]
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.LINUX_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
@@ -191,7 +198,7 @@ jobs:
   ios:
     name: iOS
     needs: [core, frontend]
-    runs-on: macos-latest
+    runs-on: ${{ vars.MACOS_RUNNER || 'macos-latest' }}
     steps:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
