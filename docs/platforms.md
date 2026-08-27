@@ -85,13 +85,24 @@ Bibliotheken decken alle fuenf Ziele ab:
 | macOS | `libpdfium.dylib` im Paket | zur Laufzeit geladen |
 | Linux | `libpdfium.so` neben der Anwendung | zur Laufzeit geladen |
 | Android | `libpdfium.so` in `jniLibs/<abi>` | zur Laufzeit geladen |
-| iOS | `libpdfium.a` | fest ins Programm gebunden |
+| iOS | `libpdfium.dylib` im Bundle unter `Frameworks` | zur Laufzeit geladen |
 
-iOS erlaubt keine dynamische Bibliothek ausserhalb eines Frameworks, deshalb
-wird dort statisch gebunden. Das geschieht automatisch, sobald fuer iOS gebaut
-wird, siehe die Zieldefinition in `crates/npdf-core/Cargo.toml`. Der Bau
-erwartet nur, dass `PDFIUM_STATIC_LIB_PATH` auf das Verzeichnis mit der
-`libpdfium.a` zeigt.
+Zu iOS gab es in M0 eine falsche Annahme, die inzwischen ausgeraeumt ist. Der
+Plan war, dort statisch zu binden. Die vorgebauten Pakete enthalten aber gar
+keine statische Bibliothek, weder als `libpdfium.a` noch als xcframework, alle
+dreizehn Pakete wurden daraufhin geprueft. iOS bekommt deshalb dieselbe
+dynamische Bibliothek wie alle anderen Ziele. Das ist zulaessig, solange sie im
+App-Bundle unter `Frameworks` liegt und zusammen mit der App signiert wird.
+
+Was daraus folgt und in M7 zu tun ist: das Xcode-Projekt, das Tauri erzeugt,
+braucht einen Schritt, der `libpdfium.dylib` in das Bundle kopiert, mitsigniert
+und den Ladepfad auf `@rpath` setzt. Ohne diesen Schritt baut die App, findet
+den Renderer zur Laufzeit aber nicht. Die App faellt dann nicht um, sie meldet
+ueber `render::probe` sauber, dass die Darstellung fehlt.
+
+Alle dreizehn Ziele wurden einzeln geprueft: Paketname, Archivaufbau, Ablage
+und Pruefsumme. Die Pruefsummen stehen in `scripts/pdfium-lock.json` und werden
+bei jedem weiteren Lauf verglichen.
 
 Falls sich das auf einem Ziel doch als untragbar erweist, ist der Ausweg
 vorbereitet: `render::PageRenderer` ist eine Schnittstelle, hinter die ein
@@ -104,3 +115,24 @@ Tesseract ist C++ und auf Mobilgeraeten aufwendig zu bauen. Der Plan bleibt: auf
 dem Schreibtisch als abschaltbare Zusatzfunktion in M8, auf iOS und Android
 vorerst gar nicht, und in der Oberflaeche dann ausgeblendet statt halb da.
 `PlatformCapabilities::ocr` sagt das dem Frontend bereits heute.
+
+## Veroeffentlichen
+
+`.github/workflows/release.yml` baut die Installationsdateien und haengt sie an
+eine GitHub-Veroeffentlichung. Ausgeloest wird er von einem Versionsschild wie
+`v0.1.0` oder von Hand ueber den Reiter Actions.
+
+| Ziel | Ergebnis |
+|---|---|
+| macOS | DMG, ein Abbild fuer Apple Silicon und Intel zusammen |
+| Windows | MSI und NSIS-Installer |
+| Linux | AppImage und DEB |
+
+Die Veroeffentlichung entsteht als Entwurf, damit du sie ansiehst, bevor sie
+sichtbar wird. Ohne Zertifikate sind die Dateien unsigniert: macOS zeigt beim
+ersten Start eine Gatekeeper-Meldung, Windows eine SmartScreen-Warnung.
+
+Wichtig: eine DMG kann nur auf macOS entstehen. `hdiutil` und der
+macOS-Paketierer gibt es nur dort, und ein Kreuzbau von Linux oder Windows aus
+scheitert am Apple-SDK. Ohne Mac fuehrt der einzige Weg ueber den
+macOS-Laeufer in der CI.

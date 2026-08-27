@@ -42,6 +42,21 @@ Testdateien und Tests:
 Die Tests laufen auch ohne die beiden Downloads. Was eine fehlende Datei
 braucht, meldet dann einen uebersprungenen Lauf statt eines Fehlers.
 
+## Installationsdateien bauen
+
+Ein Versionsschild loest die Veroeffentlichung aus, oder du startest sie von
+Hand im Reiter Actions:
+
+    git tag v0.1.0 && git push origin v0.1.0
+
+Daraus entstehen die DMG fuer macOS, MSI und NSIS fuer Windows sowie AppImage
+und DEB fuer Linux, angehaengt an eine Veroeffentlichung im Entwurfszustand.
+Ohne Zertifikate sind die Dateien unsigniert, siehe `docs/platforms.md`.
+
+Eine DMG kann nur auf macOS entstehen, das ist keine Einstellung sondern eine
+Eigenschaft des Formats. Ohne Mac laeuft der Weg ueber den macOS-Laeufer in der
+CI.
+
 ## Aufbau
 
     crates/npdf-core/     Reines Rust, keine Systemabhaengigkeit, ueberall gleich

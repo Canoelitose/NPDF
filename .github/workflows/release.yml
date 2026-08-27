@@ -1,0 +1,121 @@
+name: Release
+
+# Builds the installers for every platform and attaches them to a GitHub
+# release. Triggered by a version tag, or by hand from the Actions tab.
+#
+# The macOS job is the only place a DMG can be produced. A disk image needs
+# hdiutil and the macOS bundler, both of which exist only on macOS, so this
+# job cannot be replaced by a cross build from Linux.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version fuer die Veroeffentlichung, zum Beispiel 0.1.0"
+        required: true
+        default: "0.1.0"
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            label: macOS, DMG
+            # One disk image that runs on Apple silicon and on Intel.
+            target: universal-apple-darwin
+            rust_targets: aarch64-apple-darwin,x86_64-apple-darwin
+            pdfium: macos-universal
+            bundles: dmg
+          - os: windows-latest
+            label: Windows, MSI und NSIS
+            target: ""
+            rust_targets: ""
+            pdfium: windows-x64
+            bundles: msi,nsis
+          - os: ubuntu-latest
+            label: Linux, AppImage und DEB
+            target: ""
+            rust_targets: ""
+            pdfium: linux-x64
+            bundles: appimage,deb
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_targets }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release-${{ matrix.label }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Systemabhaengigkeiten, nur Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev \
+            librsvg2-dev patchelf libgtk-3-dev
+
+      - run: npm ci
+
+      - name: PDFium laden
+        run: node scripts/fetch-pdfium.mjs ${{ matrix.pdfium }}
+
+      # Signing needs certificates the project does not have yet, see
+      # docs/platforms.md. Without them the artefacts are unsigned: macOS shows
+      # a Gatekeeper warning on first start, Windows shows SmartScreen.
+      - name: Bauen und paketieren
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', inputs.version) }}
+          releaseName: "NPDF ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', inputs.version) }}"
+          releaseBody: |
+            Automatisch gebaut. Die Dateien sind noch nicht signiert, siehe docs/platforms.md.
+
+            - macOS: die DMG oeffnen, NPDF in den Programme-Ordner ziehen. Beim
+              ersten Start meldet sich Gatekeeper, weil kein Zertifikat vorliegt.
+              Rechtsklick auf NPDF, dann Oeffnen.
+            - Windows: MSI oder der NSIS-Installer. SmartScreen warnt aus
+              demselben Grund.
+            - Linux: AppImage ausfuehrbar machen und starten, oder das DEB
+              installieren.
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.target != '' && format('--target {0} --bundles {1}', matrix.target, matrix.bundles) || format('--bundles {0}', matrix.bundles) }}
+
+      # A second copy as a workflow artefact, so the files can be downloaded
+      # even while the release is still a draft.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npdf-${{ matrix.pdfium }}
+          path: |
+            target/release/bundle/**/*
+            target/universal-apple-darwin/release/bundle/**/*
+          if-no-files-found: warn
+          retention-days: 14

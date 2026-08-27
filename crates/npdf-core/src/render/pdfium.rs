@@ -9,10 +9,10 @@
 //!   is loaded at run time. `NPDF_PDFIUM_PATH` overrides the search.
 //! * Android: `libpdfium.so` ships inside the APK under `jniLibs` and is found
 //!   through the normal library search path.
-//! * iOS: dynamic libraries are not an option, so the static library is linked
-//!   into the binary. That happens automatically for the iOS target, the build
-//!   only needs PDFIUM_STATIC_LIB_PATH to point at the directory with
-//!   libpdfium.a.
+//! * iOS: the prebuilt packages contain no static archive, only a dynamic
+//!   library, so `libpdfium.dylib` is embedded in the app bundle under
+//!   `Frameworks` and loaded from there. iOS permits this as long as the
+//!   library sits inside the bundle and is signed together with the app.
 //!
 //! `Pdfium::new` may only be called once per process, so the instance lives in a
 //! `OnceLock` and everything borrows from it.
@@ -33,14 +33,6 @@ fn instance() -> std::result::Result<&'static Pdfium, String> {
     PDFIUM.get_or_init(bind).as_ref().map_err(|e| e.clone())
 }
 
-#[cfg(target_os = "ios")]
-fn bind() -> std::result::Result<Pdfium, String> {
-    Pdfium::bind_to_statically_linked_library()
-        .map(Pdfium::new)
-        .map_err(|e| describe(&e))
-}
-
-#[cfg(not(target_os = "ios"))]
 fn bind() -> std::result::Result<Pdfium, String> {
     let mut attempts: Vec<String> = Vec::new();
 
@@ -62,7 +54,6 @@ fn bind() -> std::result::Result<Pdfium, String> {
 }
 
 /// Where to look for the shared library, most specific first.
-#[cfg(not(target_os = "ios"))]
 fn search_directories() -> Vec<std::path::PathBuf> {
     use std::path::PathBuf;
     let mut dirs: Vec<PathBuf> = Vec::new();
@@ -74,7 +65,9 @@ fn search_directories() -> Vec<std::path::PathBuf> {
     if let Ok(exe) = std::env::current_exe() {
         if let Some(dir) = exe.parent() {
             dirs.push(dir.to_path_buf());
-            // macOS puts frameworks beside the executable inside the bundle.
+            // Inside an iOS bundle the executable sits next to Frameworks,
+            // inside a macOS bundle it sits one level below it.
+            dirs.push(dir.join("Frameworks"));
             dirs.push(dir.join("../Frameworks"));
         }
     }

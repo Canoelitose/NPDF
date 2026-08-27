@@ -62,10 +62,6 @@ fn enabled_features() -> Vec<String> {
     if cfg!(feature = "pdfium") {
         features.push("pdfium".to_string());
     }
-    if cfg!(target_os = "ios") {
-        // On iOS the library is part of the binary rather than a file beside it.
-        features.push("pdfium-static".to_string());
-    }
     features
 }
 

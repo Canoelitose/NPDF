@@ -204,17 +204,14 @@ jobs:
       - name: PDFium fuer iOS laden
         run: node scripts/fetch-pdfium.mjs ios-arm64 ios-simulator-arm64
 
-      # PDFium is linked statically on iOS, so the Rust side is what has to
-      # compile. This proves the core and the shell are free of anything that
-      # only exists on a desktop.
+      # PDFium is loaded at run time on iOS as well: the prebuilt packages carry
+      # no static archive, only a dynamic library, which is embedded in the app
+      # bundle. So the Rust side is what has to compile here. This proves the
+      # core and the shell are free of anything that only exists on a desktop.
       - name: Kern und Schale fuer das Geraet uebersetzen
-        env:
-          PDFIUM_STATIC_LIB_PATH: ${{ github.workspace }}/vendor/pdfium/ios/device-arm64
         run: cargo build -p npdf --target aarch64-apple-ios
 
       - name: Kern und Schale fuer den Simulator uebersetzen
-        env:
-          PDFIUM_STATIC_LIB_PATH: ${{ github.workspace }}/vendor/pdfium/ios/simulator-arm64
         run: cargo build -p npdf --target aarch64-apple-ios-sim
 
       - name: Xcode-Projekt erzeugen

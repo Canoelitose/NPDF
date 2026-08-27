@@ -10,8 +10,16 @@
  * Usage:
  *   node scripts/fetch-pdfium.mjs                 the current machine
  *   node scripts/fetch-pdfium.mjs linux-x64       one target
- *   node scripts/fetch-pdfium.mjs --all           every target
+ *   node scripts/fetch-pdfium.mjs --all           check every target, place none
+ *   node scripts/fetch-pdfium.mjs --verify a b    check the named targets only
  *   node scripts/fetch-pdfium.mjs --list          what is configured
+ *
+ * Several targets share one destination on purpose, because the bundler needs
+ * the library at a fixed path: linux-x64 and linux-arm64 both become
+ * vendor/pdfium/lib/libpdfium.so, and only one of them belongs on a given
+ * machine. Placing every target would therefore leave the wrong file behind,
+ * so --all only downloads and checks, it never writes into the tree. Use it to
+ * fill the checksum lock; name the target you actually need to install one.
  *
  * The checksum of every downloaded archive is recorded in scripts/pdfium-lock.json
  * on the first run and verified on every run after that. Commit that file.
@@ -60,7 +68,7 @@ function extract(archivePath, into) {
   execFileSync("tar", ["-xzf", archivePath, "-C", into], { stdio: "inherit" });
 }
 
-async function fetchTarget(name, lock) {
+async function fetchTarget(name, lock, place) {
   const target = config.targets[name];
   if (!target) {
     throw new Error(`unknown target ${name}, try --list`);
@@ -80,6 +88,11 @@ async function fetchTarget(name, lock) {
     );
   }
   lock[lockKey] = digest;
+
+  if (!place) {
+    process.stdout.write(`     geprueft, ${archive.length} Bytes, nicht abgelegt\n`);
+    return;
+  }
 
   const staging = mkdtempSync(join(tmpdir(), "npdf-pdfium-"));
   try {
@@ -125,15 +138,21 @@ async function main() {
     return;
   }
 
-  const names = args.includes("--all")
+  const all = args.includes("--all");
+  const names = all
     ? Object.keys(config.targets)
     : args.filter((arg) => !arg.startsWith("--"));
   const targets = names.length > 0 ? names : defaultTargets();
+  // Several targets share a destination, so installing all of them would leave
+  // the wrong library behind. --all therefore only checks.
+  const place = !all && !args.includes("--verify");
 
-  process.stdout.write(`PDFium ${config.release}\n`);
+  process.stdout.write(
+    `PDFium ${config.release}${place ? "" : ", nur pruefen, nichts ablegen"}\n`,
+  );
   const lock = loadLock();
   for (const name of targets) {
-    await fetchTarget(name, lock);
+    await fetchTarget(name, lock, place);
   }
   saveLock(lock);
   process.stdout.write("done\n");
