@@ -1,0 +1,37 @@
+[package]
+name = "npdf-core"
+description = "Platform independent PDF document model, extraction, editing and saving core for NPDF"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[features]
+default = []
+# Enables the PDFium based renderer. PDFium is loaded dynamically on desktop and
+# linked statically on iOS, so this feature never needs a C++ toolchain at build
+# time on the platforms we ship.
+pdfium = ["dep:pdfium-render"]
+
+[dependencies]
+lopdf = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+log = { workspace = true }
+parking_lot = { workspace = true }
+sha2 = { workspace = true }
+ttf-parser = { workspace = true }
+pdfium-render = { workspace = true, optional = true }
+
+# iOS does not allow loading a dynamic library that is not part of a framework,
+# so there PDFium is linked into the binary instead. The extra features pull in
+# the C++ standard library and CoreGraphics, which the static library needs.
+# The build expects PDFIUM_STATIC_LIB_PATH to point at the directory holding
+# libpdfium.a, see scripts/fetch-pdfium.mjs.
+[target.'cfg(target_os = "ios")'.dependencies]
+pdfium-render = { workspace = true, optional = true, features = ["static", "libc++", "core_graphics"] }
+
+[dev-dependencies]
+serde_json = { workspace = true }

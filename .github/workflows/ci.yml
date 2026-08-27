@@ -1,0 +1,232 @@
+name: CI
+
+# Every milestone has to build on all five targets before it counts as finished,
+# so the build matrix is part of the pipeline from M0 on rather than added later.
+
+on:
+  push:
+    branches: ["main", "claude/**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  core:
+    name: Kern, plattformunabhaengig
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Formatierung
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy -p npdf-core --all-targets --all-features -- -D warnings
+
+      - name: Testdateien laden
+        run: node scripts/fetch-fixtures.mjs
+
+      - name: PDFium laden
+        run: node scripts/fetch-pdfium.mjs linux-x64
+
+      - name: Tests
+        env:
+          NPDF_PDFIUM_PATH: ${{ github.workspace }}/vendor/pdfium/lib
+        run: cargo test -p npdf-core --all-features
+
+      - name: Tests ohne Renderer
+        run: cargo test -p npdf-core
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+
+  desktop:
+    name: ${{ matrix.label }}
+    needs: [core, frontend]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: Linux
+            pdfium: linux-x64
+            bundles: deb,appimage
+          - os: macos-latest
+            label: macOS
+            pdfium: macos-arm64
+            bundles: dmg,app
+          - os: windows-latest
+            label: Windows
+            pdfium: windows-x64
+            bundles: msi,nsis
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.label }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Systemabhaengigkeiten, nur Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev \
+            librsvg2-dev patchelf libgtk-3-dev
+
+      - run: npm ci
+      - name: PDFium laden
+        run: node scripts/fetch-pdfium.mjs ${{ matrix.pdfium }}
+
+      - name: Bauen und paketieren
+        run: npm run tauri -- build --bundles ${{ matrix.bundles }}
+
+      # Signing needs certificates the project does not have yet. The steps stay
+      # here, switched off, so that adding the secrets is the only thing left to
+      # do. See docs/platforms.md.
+      - name: Signieren, macOS
+        if: matrix.os == 'macos-latest' && vars.ENABLE_SIGNING == 'true'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+        run: npm run tauri -- build --bundles dmg
+
+      - name: Signieren, Windows
+        if: matrix.os == 'windows-latest' && vars.ENABLE_SIGNING == 'true'
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.WINDOWS_CERTIFICATE }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: npm run tauri -- build --bundles msi,nsis
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npdf-${{ matrix.label }}
+          path: |
+            target/release/bundle/**/*
+          if-no-files-found: warn
+          retention-days: 7
+
+  android:
+    name: Android
+    needs: [core, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: android
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: NDK installieren
+        run: |
+          sdkmanager --install "ndk;27.2.12479018"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+
+      - run: npm ci
+      - name: PDFium fuer alle Android-Architekturen laden
+        run: node scripts/fetch-pdfium.mjs android-arm64 android-arm android-x64
+
+      - name: Android-Projekt erzeugen
+        run: npm run tauri -- android init --ci
+
+      - name: APK bauen
+        run: npm run tauri -- android build --apk --debug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npdf-Android
+          path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: warn
+          retention-days: 7
+
+  ios:
+    name: iOS
+    needs: [core, frontend]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ios
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - name: PDFium fuer iOS laden
+        run: node scripts/fetch-pdfium.mjs ios-arm64 ios-simulator-arm64
+
+      # PDFium is linked statically on iOS, so the Rust side is what has to
+      # compile. This proves the core and the shell are free of anything that
+      # only exists on a desktop.
+      - name: Kern und Schale fuer das Geraet uebersetzen
+        env:
+          PDFIUM_STATIC_LIB_PATH: ${{ github.workspace }}/vendor/pdfium/ios/device-arm64
+        run: cargo build -p npdf --target aarch64-apple-ios
+
+      - name: Kern und Schale fuer den Simulator uebersetzen
+        env:
+          PDFIUM_STATIC_LIB_PATH: ${{ github.workspace }}/vendor/pdfium/ios/simulator-arm64
+        run: cargo build -p npdf --target aarch64-apple-ios-sim
+
+      - name: Xcode-Projekt erzeugen
+        run: npm run tauri -- ios init --ci
+
+      # A signed IPA needs the Apple Developer Program. The step waits for the
+      # secrets, see docs/platforms.md.
+      - name: IPA bauen
+        if: vars.ENABLE_SIGNING == 'true'
+        env:
+          APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
+        run: npm run tauri -- ios build --export-method app-store-connect
