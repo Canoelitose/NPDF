@@ -108,19 +108,16 @@ jobs:
       - name: PDFium laden
         run: node scripts/fetch-pdfium.mjs ${{ matrix.pdfium }}
 
-      # Signing needs certificates the project does not have yet, see
-      # docs/platforms.md. Without them the artefacts are unsigned: macOS shows
-      # a Gatekeeper warning on first start, Windows shows SmartScreen.
+      # Two steps, never both. The signing variables must not merely be empty
+      # when there is nothing to sign with, they must be absent: Tauri reads
+      # them with std::env::var, which answers Ok("") for a variable that is
+      # set but empty, so an empty secret still counts as present and the
+      # bundler tries to import a certificate that is not there.
       - name: Bauen und paketieren
+        if: vars.ENABLE_SIGNING != 'true'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
         with:
           tagName: ${{ needs.version.outputs.tag }}
           releaseName: "NPDF ${{ needs.version.outputs.tag }}"
@@ -137,6 +134,32 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.target != '' && format('--target {0} --bundles {1}', matrix.target, matrix.bundles) || format('--bundles {0}', matrix.bundles) }}
+
+      - name: Bauen, paketieren und signieren
+        if: vars.ENABLE_SIGNING == 'true'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+        with:
+          tagName: ${{ needs.version.outputs.tag }}
+          releaseName: "NPDF ${{ needs.version.outputs.tag }}"
+          releaseBody: |
+            Automatisch gebaut und signiert.
+
+            - macOS: die DMG oeffnen und NPDF in den Programme-Ordner ziehen.
+            - Windows: MSI oder der NSIS-Installer.
+            - Linux: AppImage ausfuehrbar machen und starten, oder das DEB
+              installieren.
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.target != '' && format('--target {0} --bundles {1}', matrix.target, matrix.bundles) || format('--bundles {0}', matrix.bundles) }}
+
 
       # A second copy as a workflow artefact, so the files can be downloaded
       # even while the release is still a draft.
