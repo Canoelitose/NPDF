@@ -93,3 +93,26 @@ einzeln zu pruefen kostet ein Vielfaches der Bauzeit. Beides macht
 Die Variable allein beweist nichts. Erst wenn ein Lauf auf dem eigenen Runner
 durchgelaufen ist und seine Installationsdatei als Artefakt haengt, ist die
 Sache fertig. Unter Actions steht am Auftrag, welche Maschine ihn genommen hat.
+
+## Der Mac darf nicht einschlafen
+
+Das ist kein Schoenheitsfehler, es kostet ganze Laeufe. Zweimal beobachtet:
+
+* **Zwischen Jobs.** Schlaeft der Mac im Leerlauf ein, meldet sich der Runner ab
+  und wartende Jobs bleiben in der Warteschlange stehen, ohne Fehler, ohne Ende.
+* **Waehrend eines Jobs.** Der Runner geht mit schlafen, der Job stirbt mitten im
+  Schritt, alle Folgeschritte bleiben auf `pending` und es gibt kein Protokoll.
+  Genau das passierte am 27. August um 23:33 Uhr, nach exakt zehn Minuten, waehrend
+  `setup-node` lief.
+
+Zwei Massnahmen, beide noetig:
+
+    sudo pmset -a sleep 0 disksleep 0
+
+erledigt der Einrichtungsschritt in `scripts/runner/setup-macos.sh` mit. Und im
+Workflow steht `caffeinate -dimsu -w $PPID` als **erster** Schritt des Jobs.
+Weiter unten nuetzt es nichts, dann kann der Rechner vorher einschlafen.
+
+Wenn du den Ruhezustand wieder willst:
+
+    sudo pmset -a sleep 1

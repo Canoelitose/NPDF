@@ -72,6 +72,22 @@ echo "==> Anmelden"
   --labels self-hosted,macOS,"$ARCH",npdf,npdf-mac \
   --work _work --unattended --replace
 
+echo "==> Ruhezustand abschalten"
+# A build machine that falls asleep is not a build machine. Two problems, two
+# answers: asleep between jobs means the runner drops off and jobs queue
+# forever; asleep during a job takes the runner down mid step and the job dies
+# without a log. The workflow keeps the Mac awake while it builds, this keeps it
+# awake the rest of the time. Needs administrator rights, so it asks once.
+if sudo -n true 2>/dev/null || sudo -v; then
+  sudo pmset -a sleep 0 disksleep 0
+  sudo pmset -a womp 1 2>/dev/null || true
+  echo "    Ruhezustand aus. Rueckgaengig mit: sudo pmset -a sleep 1"
+else
+  echo "    Uebersprungen, keine Administratorrechte." >&2
+  echo "    Ohne das schlaeft der Mac ein und Jobs bleiben haengen. Von Hand:" >&2
+  echo "      sudo pmset -a sleep 0 disksleep 0" >&2
+fi
+
 echo "==> Als Dienst einrichten"
 ./svc.sh install
 ./svc.sh start

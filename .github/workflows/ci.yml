@@ -86,6 +86,19 @@ jobs:
             pdfium: windows-x64
             bundles: msi,nsis
     steps:
+      # First step on purpose. A Mac that falls asleep mid build takes the
+      # runner with it and the job dies without a log. That happened while
+      # setup-node was still running, so a wakelock placed further down never
+      # got the chance to take hold. `-w $PPID` ties it to the runner process,
+      # so it ends when the job ends, however it ends.
+      #
+      # This only covers the build itself. A Mac idling between jobs can still
+      # fall asleep and drop off, which leaves jobs queued forever, so the
+      # machine has to be kept awake too. See scripts/runner/setup-macos.sh.
+      - name: Den Mac wach halten, solange er baut
+        if: matrix.label == 'macOS'
+        run: caffeinate -dimsu -w $PPID &
+
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
@@ -95,13 +108,6 @@ jobs:
         with:
           node-version: 22
           cache: npm
-
-      # A Mac that falls asleep mid build takes the runner with it, and the job
-      # then dies without a log. `-w $PPID` ties the wakelock to the runner
-      # process, so it ends when the job ends, however it ends.
-      - name: Den Mac wach halten, solange er baut
-        if: matrix.label == 'macOS'
-        run: caffeinate -dimsu -w $PPID &
 
       - name: Systemabhaengigkeiten, nur Linux
         if: matrix.label == 'Linux' && runner.environment == 'github-hosted'
