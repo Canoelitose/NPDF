@@ -27,8 +27,17 @@
 
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, copyFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 
@@ -60,6 +69,27 @@ async function download(url) {
 
 function sha256(buffer) {
   return createHash("sha256").update(buffer).digest("hex");
+}
+
+/**
+ * The library file names of every platform we ship.
+ *
+ * Several targets install into the same directory, because the bundler expects
+ * the library at a fixed path. Without this the leftovers of an earlier fetch
+ * stay behind and get packaged: a Linux build would carry a macOS dylib and a
+ * Windows DLL around with it, more than twenty megabytes of dead weight.
+ */
+const LIBRARY_NAMES = ["pdfium.dll", "libpdfium.dylib", "libpdfium.so", "libpdfium.a"];
+
+function removeForeignLibraries(directory, keep) {
+  for (const name of LIBRARY_NAMES) {
+    if (name === keep) continue;
+    const candidate = join(directory, name);
+    if (existsSync(candidate)) {
+      unlinkSync(candidate);
+      process.stdout.write(`     entfernt: ${name}, gehoert zu einer anderen Plattform\n`);
+    }
+  }
 }
 
 function extract(archivePath, into) {
@@ -109,6 +139,7 @@ async function fetchTarget(name, lock, place) {
     }
     const destination = join(root, target.into);
     mkdirSync(dirname(destination), { recursive: true });
+    removeForeignLibraries(dirname(destination), basename(destination));
     copyFileSync(source, destination);
     process.stdout.write(`     -> ${target.into}\n`);
   } finally {

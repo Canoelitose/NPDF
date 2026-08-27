@@ -46,7 +46,7 @@
       "icons/icon.ico"
     ],
     "resources": {
-      "../vendor/pdfium/lib/": "pdfium/"
+      "../vendor/pdfium/lib/*pdfium*": "pdfium/"
     },
     "fileAssociations": [
       {
@@ -57,11 +57,6 @@
         "mimeType": "application/pdf"
       }
     ],
-    "linux": {
-      "deb": {
-        "depends": ["libwebkit2gtk-4.1-0", "libgtk-3-0"]
-      }
-    },
     "windows": {
       "nsis": {
         "installMode": "both",

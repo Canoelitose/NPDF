@@ -13,6 +13,18 @@
 
 :root {
   /* ---------------------------------------------------------------- accent */
+  /* The accent hue, for reference and for anything that needs to know it.
+     It is NOT read by the palette below, and that is deliberate.
+
+     WebKitGTK, the engine this app runs on under Linux and the closest
+     relative of the web view on iOS, does not substitute a custom property
+     into the hue slot of hsl(). It reads the hue as zero, which turns the
+     whole window red. Tested with and without an explicit deg unit, both
+     fail. The palette therefore carries literal values.
+
+     A user selectable accent stays possible, but it has to be computed in
+     TypeScript and written out as finished colour values. That belongs with
+     the settings screen, see docs/milestones/M0.md. */
   --accent-h: 265;
   --accent-s: 72%;
 
@@ -92,37 +104,37 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --accent: hsl(var(--accent-h) var(--accent-s) 66%);
-  --accent-strong: hsl(var(--accent-h) var(--accent-s) 72%);
-  --accent-muted: hsl(var(--accent-h) 40% 26%);
-  --accent-contrast: hsl(var(--accent-h) 60% 10%);
-  --accent-ring: hsl(var(--accent-h) var(--accent-s) 66% / 0.5);
+  --accent: hsl(265 72% 66%);
+  --accent-strong: hsl(265 72% 72%);
+  --accent-muted: hsl(265 40% 26%);
+  --accent-contrast: hsl(265 60% 10%);
+  --accent-ring: hsl(265 72% 66% / 0.5);
 
   /* The window background is a slow gradient, not a flat fill. */
-  --window-bg: hsl(var(--accent-h) 22% 8%);
+  --window-bg: hsl(265 22% 8%);
   --window-gradient:
-    radial-gradient(120% 90% at 12% -10%, hsl(var(--accent-h) 46% 22% / 0.65), transparent 62%),
-    radial-gradient(100% 80% at 100% 0%, hsl(calc(var(--accent-h) + 40) 42% 20% / 0.42), transparent 58%),
-    linear-gradient(180deg, hsl(var(--accent-h) 20% 10%), hsl(var(--accent-h) 24% 6%));
+    radial-gradient(120% 90% at 12% -10%, hsl(265 46% 22% / 0.65), transparent 62%),
+    radial-gradient(100% 80% at 100% 0%, hsl(305 42% 20% / 0.42), transparent 58%),
+    linear-gradient(180deg, hsl(265 20% 10%), hsl(265 24% 6%));
 
-  --surface: hsl(var(--accent-h) 14% 13% / 0.72);
-  --surface-solid: hsl(var(--accent-h) 14% 13%);
-  --surface-raised: hsl(var(--accent-h) 14% 17% / 0.86);
-  --surface-sunken: hsl(var(--accent-h) 18% 9% / 0.6);
-  --surface-hover: hsl(var(--accent-h) 16% 24% / 0.55);
-  --surface-active: hsl(var(--accent-h) 20% 28% / 0.72);
+  --surface: hsl(265 14% 13% / 0.72);
+  --surface-solid: hsl(265 14% 13%);
+  --surface-raised: hsl(265 14% 17% / 0.86);
+  --surface-sunken: hsl(265 18% 9% / 0.6);
+  --surface-hover: hsl(265 16% 24% / 0.55);
+  --surface-active: hsl(265 20% 28% / 0.72);
 
   /* The page itself always stays paper coloured, in both themes. */
   --page-bg: #ffffff;
-  --page-edge: hsl(var(--accent-h) 10% 4% / 0.55);
+  --page-edge: hsl(265 10% 4% / 0.55);
 
-  --border: hsl(var(--accent-h) 12% 100% / 0.09);
-  --border-strong: hsl(var(--accent-h) 12% 100% / 0.16);
+  --border: hsl(265 12% 100% / 0.09);
+  --border-strong: hsl(265 12% 100% / 0.16);
 
-  --text: hsl(var(--accent-h) 16% 96%);
-  --text-muted: hsl(var(--accent-h) 10% 96% / 0.62);
-  --text-faint: hsl(var(--accent-h) 10% 96% / 0.4);
-  --text-on-accent: hsl(var(--accent-h) 60% 10%);
+  --text: hsl(265 16% 96%);
+  --text-muted: hsl(265 10% 96% / 0.62);
+  --text-faint: hsl(265 10% 96% / 0.4);
+  --text-on-accent: hsl(265 60% 10%);
 
   --danger: hsl(2 74% 66%);
   --warning: hsl(38 82% 64%);
@@ -141,34 +153,34 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --accent: hsl(var(--accent-h) 62% 48%);
-  --accent-strong: hsl(var(--accent-h) 64% 42%);
-  --accent-muted: hsl(var(--accent-h) 70% 92%);
+  --accent: hsl(265 62% 48%);
+  --accent-strong: hsl(265 64% 42%);
+  --accent-muted: hsl(265 70% 92%);
   --accent-contrast: hsl(0 0% 100%);
-  --accent-ring: hsl(var(--accent-h) 62% 48% / 0.35);
+  --accent-ring: hsl(265 62% 48% / 0.35);
 
-  --window-bg: hsl(var(--accent-h) 30% 97%);
+  --window-bg: hsl(265 30% 97%);
   --window-gradient:
-    radial-gradient(120% 90% at 10% -10%, hsl(var(--accent-h) 70% 88% / 0.7), transparent 60%),
-    radial-gradient(100% 80% at 100% 0%, hsl(calc(var(--accent-h) + 40) 66% 90% / 0.5), transparent 58%),
-    linear-gradient(180deg, hsl(var(--accent-h) 34% 98%), hsl(var(--accent-h) 26% 93%));
+    radial-gradient(120% 90% at 10% -10%, hsl(265 70% 88% / 0.7), transparent 60%),
+    radial-gradient(100% 80% at 100% 0%, hsl(305 66% 90% / 0.5), transparent 58%),
+    linear-gradient(180deg, hsl(265 34% 98%), hsl(265 26% 93%));
 
   --surface: hsl(0 0% 100% / 0.74);
   --surface-solid: hsl(0 0% 100%);
   --surface-raised: hsl(0 0% 100% / 0.9);
-  --surface-sunken: hsl(var(--accent-h) 22% 92% / 0.6);
-  --surface-hover: hsl(var(--accent-h) 30% 88% / 0.6);
-  --surface-active: hsl(var(--accent-h) 34% 84% / 0.78);
+  --surface-sunken: hsl(265 22% 92% / 0.6);
+  --surface-hover: hsl(265 30% 88% / 0.6);
+  --surface-active: hsl(265 34% 84% / 0.78);
 
   --page-bg: #ffffff;
-  --page-edge: hsl(var(--accent-h) 20% 40% / 0.22);
+  --page-edge: hsl(265 20% 40% / 0.22);
 
-  --border: hsl(var(--accent-h) 20% 20% / 0.1);
-  --border-strong: hsl(var(--accent-h) 20% 20% / 0.18);
+  --border: hsl(265 20% 20% / 0.1);
+  --border-strong: hsl(265 20% 20% / 0.18);
 
-  --text: hsl(var(--accent-h) 24% 14%);
-  --text-muted: hsl(var(--accent-h) 14% 14% / 0.64);
-  --text-faint: hsl(var(--accent-h) 14% 14% / 0.42);
+  --text: hsl(265 24% 14%);
+  --text-muted: hsl(265 14% 14% / 0.64);
+  --text-faint: hsl(265 14% 14% / 0.42);
   --text-on-accent: hsl(0 0% 100%);
 
   --danger: hsl(2 68% 48%);
@@ -178,9 +190,9 @@
   --blur-panel: 20px;
   --blur-sheet: 30px;
 
-  --shadow-soft: 0 1px 2px hsl(var(--accent-h) 20% 20% / 0.08), 0 4px 14px hsl(var(--accent-h) 20% 20% / 0.08);
-  --shadow-panel: 0 2px 6px hsl(var(--accent-h) 20% 20% / 0.08), 0 18px 42px hsl(var(--accent-h) 20% 20% / 0.14);
-  --shadow-page: 0 2px 8px hsl(var(--accent-h) 20% 20% / 0.1), 0 24px 64px hsl(var(--accent-h) 20% 20% / 0.18);
+  --shadow-soft: 0 1px 2px hsl(265 20% 20% / 0.08), 0 4px 14px hsl(265 20% 20% / 0.08);
+  --shadow-panel: 0 2px 6px hsl(265 20% 20% / 0.08), 0 18px 42px hsl(265 20% 20% / 0.14);
+  --shadow-page: 0 2px 8px hsl(265 20% 20% / 0.1), 0 24px 64px hsl(265 20% 20% / 0.18);
   --shadow-inset: inset 0 1px 0 hsl(0 0% 100% / 0.7);
 }
 
@@ -189,42 +201,42 @@
   :root:not([data-theme="dark"]) {
     color-scheme: light;
 
-    --accent: hsl(var(--accent-h) 62% 48%);
-    --accent-strong: hsl(var(--accent-h) 64% 42%);
-    --accent-muted: hsl(var(--accent-h) 70% 92%);
+    --accent: hsl(265 62% 48%);
+    --accent-strong: hsl(265 64% 42%);
+    --accent-muted: hsl(265 70% 92%);
     --accent-contrast: hsl(0 0% 100%);
-    --accent-ring: hsl(var(--accent-h) 62% 48% / 0.35);
+    --accent-ring: hsl(265 62% 48% / 0.35);
 
-    --window-bg: hsl(var(--accent-h) 30% 97%);
+    --window-bg: hsl(265 30% 97%);
     --window-gradient:
-      radial-gradient(120% 90% at 10% -10%, hsl(var(--accent-h) 70% 88% / 0.7), transparent 60%),
-      radial-gradient(100% 80% at 100% 0%, hsl(calc(var(--accent-h) + 40) 66% 90% / 0.5), transparent 58%),
-      linear-gradient(180deg, hsl(var(--accent-h) 34% 98%), hsl(var(--accent-h) 26% 93%));
+      radial-gradient(120% 90% at 10% -10%, hsl(265 70% 88% / 0.7), transparent 60%),
+      radial-gradient(100% 80% at 100% 0%, hsl(305 66% 90% / 0.5), transparent 58%),
+      linear-gradient(180deg, hsl(265 34% 98%), hsl(265 26% 93%));
 
     --surface: hsl(0 0% 100% / 0.74);
     --surface-solid: hsl(0 0% 100%);
     --surface-raised: hsl(0 0% 100% / 0.9);
-    --surface-sunken: hsl(var(--accent-h) 22% 92% / 0.6);
-    --surface-hover: hsl(var(--accent-h) 30% 88% / 0.6);
-    --surface-active: hsl(var(--accent-h) 34% 84% / 0.78);
+    --surface-sunken: hsl(265 22% 92% / 0.6);
+    --surface-hover: hsl(265 30% 88% / 0.6);
+    --surface-active: hsl(265 34% 84% / 0.78);
 
-    --page-edge: hsl(var(--accent-h) 20% 40% / 0.22);
+    --page-edge: hsl(265 20% 40% / 0.22);
 
-    --border: hsl(var(--accent-h) 20% 20% / 0.1);
-    --border-strong: hsl(var(--accent-h) 20% 20% / 0.18);
+    --border: hsl(265 20% 20% / 0.1);
+    --border-strong: hsl(265 20% 20% / 0.18);
 
-    --text: hsl(var(--accent-h) 24% 14%);
-    --text-muted: hsl(var(--accent-h) 14% 14% / 0.64);
-    --text-faint: hsl(var(--accent-h) 14% 14% / 0.42);
+    --text: hsl(265 24% 14%);
+    --text-muted: hsl(265 14% 14% / 0.64);
+    --text-faint: hsl(265 14% 14% / 0.42);
     --text-on-accent: hsl(0 0% 100%);
 
     --danger: hsl(2 68% 48%);
     --warning: hsl(32 78% 44%);
     --success: hsl(148 46% 36%);
 
-    --shadow-soft: 0 1px 2px hsl(var(--accent-h) 20% 20% / 0.08), 0 4px 14px hsl(var(--accent-h) 20% 20% / 0.08);
-    --shadow-panel: 0 2px 6px hsl(var(--accent-h) 20% 20% / 0.08), 0 18px 42px hsl(var(--accent-h) 20% 20% / 0.14);
-    --shadow-page: 0 2px 8px hsl(var(--accent-h) 20% 20% / 0.1), 0 24px 64px hsl(var(--accent-h) 20% 20% / 0.18);
+    --shadow-soft: 0 1px 2px hsl(265 20% 20% / 0.08), 0 4px 14px hsl(265 20% 20% / 0.08);
+    --shadow-panel: 0 2px 6px hsl(265 20% 20% / 0.08), 0 18px 42px hsl(265 20% 20% / 0.14);
+    --shadow-page: 0 2px 8px hsl(265 20% 20% / 0.1), 0 24px 64px hsl(265 20% 20% / 0.18);
     --shadow-inset: inset 0 1px 0 hsl(0 0% 100% / 0.7);
   }
 }
