@@ -45,9 +45,6 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": {
-      "../vendor/pdfium/lib/*pdfium*": "pdfium/"
-    },
     "fileAssociations": [
       {
         "ext": ["pdf"],
