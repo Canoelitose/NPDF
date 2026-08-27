@@ -44,10 +44,17 @@ braucht, meldet dann einen uebersprungenen Lauf statt eines Fehlers.
 
 ## Installationsdateien bauen
 
-Ein Versionsschild loest die Veroeffentlichung aus, oder du startest sie von
-Hand im Reiter Actions:
+Ein Versionsschild loest die Veroeffentlichung aus:
 
     git tag v0.1.0 && git push origin v0.1.0
+
+Wo sich kein Schild pushen laesst, was hinter manchen Proxys und mit manchen
+Token vorkommt, geht es auch ueber einen Zweig. Der Workflow zieht die Version
+aus dem Namen und legt das Schild dann selbst an:
+
+    git switch -c release/v0.1.0 && git push origin release/v0.1.0
+
+Oder von Hand im Reiter Actions ueber Run workflow.
 
 Daraus entstehen die DMG fuer macOS, MSI und NSIS fuer Windows sowie AppImage
 und DEB fuer Linux, angehaengt an eine Veroeffentlichung im Entwurfszustand.

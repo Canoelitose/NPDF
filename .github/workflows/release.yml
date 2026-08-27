@@ -9,7 +9,12 @@ name: Release
 
 on:
   push:
+    # Three ways in, all ending at the same place. A tag is the normal one.
+    # A release/v* branch exists for environments that cannot push tags, which
+    # is more common than it sounds: many proxies and tokens allow branch
+    # updates but refuse tag refs.
     tags: ["v*"]
+    branches: ["release/v*"]
   workflow_dispatch:
     inputs:
       version:
@@ -24,8 +29,25 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  version:
+    name: Version bestimmen
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.pick.outputs.tag }}
+    steps:
+      - id: pick
+        run: |
+          case "${{ github.ref_type }}:${{ github.ref_name }}" in
+            tag:*)              TAG="${{ github.ref_name }}" ;;
+            branch:release/v*)  TAG="${GITHUB_REF_NAME#release/}" ;;
+            *)                  TAG="v${{ inputs.version }}" ;;
+          esac
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Veroeffentlichung als $TAG"
+
   build:
     name: ${{ matrix.label }}
+    needs: version
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -93,8 +115,8 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
         with:
-          tagName: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', inputs.version) }}
-          releaseName: "NPDF ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', inputs.version) }}"
+          tagName: ${{ needs.version.outputs.tag }}
+          releaseName: "NPDF ${{ needs.version.outputs.tag }}"
           releaseBody: |
             Automatisch gebaut. Die Dateien sind noch nicht signiert, siehe docs/platforms.md.
 
