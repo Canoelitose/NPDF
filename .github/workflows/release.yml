@@ -122,6 +122,20 @@ jobs:
       - name: PDFium laden
         run: node scripts/fetch-pdfium.mjs ${{ matrix.pdfium }}
 
+      # bundle_dmg.sh haengt ein Volume ein und wieder aus. Bleibt eines von
+      # einem frueheren Lauf stehen, scheitert der naechste beim Einhaengen,
+      # nach etwa zwei Minuten Wiederholungen und ohne verwertbare Meldung.
+      # Auf einem eigenen Rechner ueberlebt so ein Rest den Lauf, anders als
+      # auf einer Wegwerfmaschine.
+      - name: Stehengebliebene NPDF-Volumes loesen
+        if: matrix.pdfium == 'macos-universal'
+        run: |
+          for volume in /Volumes/NPDF*; do
+            [ -d "$volume" ] || continue
+            echo "Loese $volume"
+            hdiutil detach "$volume" -force || true
+          done
+
       # Two steps, never both. The signing variables must not merely be empty
       # when there is nothing to sign with, they must be absent: Tauri reads
       # them with std::env::var, which answers Ok("") for a variable that is
@@ -147,7 +161,7 @@ jobs:
               installieren.
           releaseDraft: true
           prerelease: false
-          args: ${{ matrix.target != '' && format('--target {0} --bundles {1}', matrix.target, matrix.bundles) || format('--bundles {0}', matrix.bundles) }}
+          args: ${{ matrix.target != '' && format('--target {0} --bundles {1} --verbose', matrix.target, matrix.bundles) || format('--bundles {0}', matrix.bundles) }}
 
       - name: Bauen, paketieren und signieren
         if: vars.ENABLE_SIGNING == 'true'
@@ -172,7 +186,7 @@ jobs:
               installieren.
           releaseDraft: true
           prerelease: false
-          args: ${{ matrix.target != '' && format('--target {0} --bundles {1}', matrix.target, matrix.bundles) || format('--bundles {0}', matrix.bundles) }}
+          args: ${{ matrix.target != '' && format('--target {0} --bundles {1} --verbose', matrix.target, matrix.bundles) || format('--bundles {0}', matrix.bundles) }}
 
 
       # A second copy as a workflow artefact, so the files can be downloaded

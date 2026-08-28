@@ -128,6 +128,20 @@ jobs:
       - name: PDFium laden
         run: node scripts/fetch-pdfium.mjs ${{ matrix.pdfium }}
 
+      # bundle_dmg.sh haengt ein Volume ein und wieder aus. Bleibt eines von
+      # einem frueheren Lauf stehen, scheitert der naechste beim Einhaengen,
+      # nach etwa zwei Minuten Wiederholungen und ohne verwertbare Meldung.
+      # Auf einem eigenen Rechner ueberlebt so ein Rest den Lauf, anders als
+      # auf einer Wegwerfmaschine.
+      - name: Stehengebliebene NPDF-Volumes loesen
+        if: matrix.label == 'macOS'
+        run: |
+          for volume in /Volumes/NPDF*; do
+            [ -d "$volume" ] || continue
+            echo "Loese $volume"
+            hdiutil detach "$volume" -force || true
+          done
+
       - name: Bauen und paketieren
         run: npm run tauri -- build --bundles ${{ matrix.bundles }}
 
