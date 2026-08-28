@@ -1,0 +1,31 @@
+# Rust
+/target
+**/target
+
+# Node
+node_modules
+dist
+dist-ssr
+.vite
+
+# Tauri
+src-tauri/target
+src-tauri/gen
+src-tauri/WixTools
+
+# Vendored native libraries, fetched by scripts/fetch-pdfium.mjs.
+# The directories stay in the repository so the bundler always finds them.
+/vendor/pdfium/**
+!/vendor/pdfium/**/
+!/vendor/pdfium/**/.gitkeep
+!/vendor/pdfium/README.md
+
+# Test fixtures downloaded at test time (see tests/fixtures/manifest.json)
+/tests/fixtures/downloads/
+
+# Editors and OS
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
+*.log

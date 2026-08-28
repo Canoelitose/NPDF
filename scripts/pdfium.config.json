@@ -1,0 +1,36 @@
+{
+  "comment": [
+    "Pinned PDFium version. The tag has to match the ABI pdfium-render was built",
+    "against, which is the pdfium_7881 feature in Cargo.toml. Changing one without",
+    "the other produces a binary that loads and then crashes on the first call.",
+    "PDFium itself is BSD-3-Clause, the prebuilt packages are Apache-2.0.",
+    "Every asset name and archive layout below was checked against the pinned",
+    "release. iOS ships a dynamic library only, there is no static archive, so",
+    "the dylib is embedded in the app bundle and loaded from there."
+  ],
+  "release": "chromium/7881",
+  "repository": "bblanchon/pdfium-binaries",
+  "targets": {
+    "windows-x64": { "asset": "pdfium-win-x64", "library": "bin/pdfium.dll", "into": "vendor/pdfium/lib/pdfium.dll" },
+    "windows-arm64": { "asset": "pdfium-win-arm64", "library": "bin/pdfium.dll", "into": "vendor/pdfium/lib/pdfium.dll" },
+    "macos-x64": { "asset": "pdfium-mac-x64", "library": "lib/libpdfium.dylib", "into": "vendor/pdfium/lib/libpdfium.dylib" },
+    "macos-arm64": { "asset": "pdfium-mac-arm64", "library": "lib/libpdfium.dylib", "into": "vendor/pdfium/lib/libpdfium.dylib" },
+    "macos-universal": { "asset": "pdfium-mac-univ", "library": "lib/libpdfium.dylib", "into": "vendor/pdfium/lib/libpdfium.dylib" },
+    "linux-x64": { "asset": "pdfium-linux-x64", "library": "lib/libpdfium.so", "into": "vendor/pdfium/lib/libpdfium.so" },
+    "linux-arm64": { "asset": "pdfium-linux-arm64", "library": "lib/libpdfium.so", "into": "vendor/pdfium/lib/libpdfium.so" },
+    "android-arm64": { "asset": "pdfium-android-arm64", "library": "lib/libpdfium.so", "into": "src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a/libpdfium.so" },
+    "android-arm": { "asset": "pdfium-android-arm", "library": "lib/libpdfium.so", "into": "src-tauri/gen/android/app/src/main/jniLibs/armeabi-v7a/libpdfium.so" },
+    "android-x64": { "asset": "pdfium-android-x64", "library": "lib/libpdfium.so", "into": "src-tauri/gen/android/app/src/main/jniLibs/x86_64/libpdfium.so" },
+    "ios-arm64": { "asset": "pdfium-ios-device-arm64", "library": "lib/libpdfium.dylib", "into": "vendor/pdfium/ios/device-arm64/libpdfium.dylib" },
+    "ios-simulator-arm64": { "asset": "pdfium-ios-simulator-arm64", "library": "lib/libpdfium.dylib", "into": "vendor/pdfium/ios/simulator-arm64/libpdfium.dylib" },
+    "ios-simulator-x64": { "asset": "pdfium-ios-simulator-x64", "library": "lib/libpdfium.dylib", "into": "vendor/pdfium/ios/simulator-x64/libpdfium.dylib" }
+  },
+  "hostDefaults": {
+    "win32-x64": ["windows-x64"],
+    "win32-arm64": ["windows-arm64"],
+    "darwin-x64": ["macos-x64"],
+    "darwin-arm64": ["macos-arm64"],
+    "linux-x64": ["linux-x64"],
+    "linux-arm64": ["linux-arm64"]
+  }
+}

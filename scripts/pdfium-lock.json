@@ -1,0 +1,15 @@
+{
+  "chromium/7881/pdfium-linux-x64": "1470e21b8b4a3b4ad7f85684e2da11d94f3b69a86d81dee11b9b6709d927ac1d",
+  "chromium/7881/pdfium-mac-univ": "df451a413c3609585e84a4a91110a9bc889cff05fe3b2db0ed817c9e90c3f7d3",
+  "chromium/7881/pdfium-ios-device-arm64": "0f73152a94bbfb467dadedce745691e55b09792ed38cc9a6b0d11f2a9dc95ea7",
+  "chromium/7881/pdfium-ios-simulator-arm64": "fcccdae4c81b39234398c102645490705da150d77bec43f75ed60738c2f50cd9",
+  "chromium/7881/pdfium-android-arm64": "16d23bb86c4188d59326dc509938f59df3c417ecfdd3d2ca2f160dc5bd49a839",
+  "chromium/7881/pdfium-win-x64": "73cc0de638ac2095e7445bf56a38200a5b7c7ca0e9f4ba144598f2457377ac08",
+  "chromium/7881/pdfium-win-arm64": "d3035d4d2cacac6ecd1a2ece197a3d702a1b2a58466276b9f870b8cb278a9d84",
+  "chromium/7881/pdfium-mac-x64": "6dedf83990e0e3d6b7c93c9e7589c5a126b0ae14b7464d76120cff7a26afb18b",
+  "chromium/7881/pdfium-mac-arm64": "52e94ca5aa8847934330daf3f8150c190682c5ca93831468794f8b90d4392e40",
+  "chromium/7881/pdfium-linux-arm64": "ee7f7b7d5468958336a818c1cd580bdd20972846b7377b13f9a923d92d1d4674",
+  "chromium/7881/pdfium-android-arm": "57f7f5c349a3268f39b1737f830e50e271aa3116417abed2c30d0c0840b1b58b",
+  "chromium/7881/pdfium-android-x64": "58bd708d6083173008c63860dbffa93396a2fee00dd76747cbd782bcf4ff9bd4",
+  "chromium/7881/pdfium-ios-simulator-x64": "7186c9ac94d4b25421b9cffd7716ac02e4153c8f27f955c831a98aab2ec107cd"
+}

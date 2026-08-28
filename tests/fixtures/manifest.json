@@ -1,0 +1,88 @@
+{
+  "comment": [
+    "Public sample PDFs, downloaded on demand so the repository stays small.",
+    "Everything here is CC0 from py-pdf/sample-files. The checksum of each file",
+    "is pinned, so a changed upstream file fails loudly instead of quietly",
+    "changing what the tests measure.",
+    "Fetch with: npm run fetch:fixtures"
+  ],
+  "baseUrl": "https://raw.githubusercontent.com/py-pdf/sample-files/main/",
+  "license": "CC0-1.0",
+  "source": "https://github.com/py-pdf/sample-files",
+  "files": [
+    {
+      "name": "simple-text.pdf",
+      "path": "001-trivial/minimal-document.pdf",
+      "sha256": "f723638db6e763cf4ccadad38a3d38a02d9ecab95dab1f0bbf00e801991b5f92",
+      "bytes": 16978,
+      "covers": "Einfacher Text, kleinstmoegliches Dokument"
+    },
+    {
+      "name": "libreoffice-text.pdf",
+      "path": "002-trivial-libre-office-writer/002-trivial-libre-office-writer.pdf",
+      "sha256": "fc67ce4f76ffb44e818ebe4f673dbeb6002ad93a59f3856ff14fb1d3625f10a5",
+      "bytes": 12609,
+      "covers": "Text aus einem echten Textprogramm, eingebettete Teilmenge"
+    },
+    {
+      "name": "large-latex.pdf",
+      "path": "009-pdflatex-geotopo/GeoTopo.pdf",
+      "sha256": "a0b9242aef9b5a2c4850160cc9aaf64f5c7b8be705d6872ae28aebf5ab512540",
+      "bytes": 5321132,
+      "covers": "Viele Seiten, Type1 und Type0 mit CID, Lesezeichen, Verweise"
+    },
+    {
+      "name": "form-fields.pdf",
+      "path": "010-pdflatex-forms/pdflatex-forms.pdf",
+      "sha256": "fc6265298caafffeee9dd2d7f3ae2e53ab9f61ec0561369429d442f731d339da",
+      "bytes": 27712,
+      "covers": "Formularfelder"
+    },
+    {
+      "name": "annotations.pdf",
+      "path": "024-annotations/annotated_pdf.pdf",
+      "sha256": "c327f921abfba23a5c42d5c429ba99ded1cf5511521003aba6d2aff9c940d9cc",
+      "bytes": 1833,
+      "covers": "Anmerkungen"
+    },
+    {
+      "name": "cmyk-image.pdf",
+      "path": "023-cmyk-image/cmyk-image.pdf",
+      "sha256": "5a5f76a951e403a5b357992789afc5164fd6c2914583741de7a1dd08ec029ab2",
+      "bytes": 443953,
+      "covers": "Bilder, CMYK-Farbraum"
+    },
+    {
+      "name": "xmp-metadata.pdf",
+      "path": "020-xmp/output_with_metadata_pymupdf.pdf",
+      "sha256": "8e52052b0d7242a6d3df844e0f24ed3c09ca36440761d1b00f85bbabc15f7369",
+      "bytes": 2097,
+      "covers": "XMP-Metadaten, muessen beim Speichern erhalten bleiben"
+    },
+    {
+      "name": "attachment.pdf",
+      "path": "025-attachment/with-attachment.pdf",
+      "sha256": "1c7e5f3bb3bbf9a2424cac84f46b17e5b62af0719d63b445c280c76634b316ba",
+      "bytes": 24296,
+      "covers": "Eingebettete Datei, darf beim Speichern nicht verloren gehen"
+    },
+    {
+      "name": "pdfkit.pdf",
+      "path": "022-pdfkit/pdfkit.pdf",
+      "sha256": "8820ba44cd62264fd561e921aacc214cee7ba76723f525d591cdb2104a87f0dd",
+      "bytes": 14404,
+      "covers": "Anderer Erzeuger, andere Struktur"
+    },
+    {
+      "name": "link.pdf",
+      "path": "016-libre-office-link/libre-office-link.pdf",
+      "sha256": "bc38b458acd125c09fb7603cf0cca5d8737eea9fe353c2aef2c42b3db9cf9076",
+      "bytes": 9473,
+      "covers": "Verweise im Dokument"
+    }
+  ],
+  "missing": [
+    "Scan ohne Textebene, wird fuer die OCR-Arbeit in M8 gebraucht",
+    "Datei mit absichtlich fehlerhafter Struktur, wird in M2 aus einer der obigen erzeugt"
+  ]
+}

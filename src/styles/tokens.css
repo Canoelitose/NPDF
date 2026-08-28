@@ -1,0 +1,261 @@
+/*
+ * Design tokens.
+ *
+ * Everything visual is defined here first and used by name everywhere else. No
+ * component may write a raw colour, radius, shadow or duration.
+ *
+ * The palette is built from one accent hue. Changing --accent-h retints the whole
+ * window, which is how the user picks their own accent colour.
+ *
+ * Dark is the default. Light is a complete, equally maintained palette, not a
+ * washed out copy. The theme follows the system unless data-theme says otherwise.
+ */
+
+:root {
+  /* ---------------------------------------------------------------- accent */
+  /* The accent hue, for reference and for anything that needs to know it.
+     It is NOT read by the palette below, and that is deliberate.
+
+     WebKitGTK, the engine this app runs on under Linux and the closest
+     relative of the web view on iOS, does not substitute a custom property
+     into the hue slot of hsl(). It reads the hue as zero, which turns the
+     whole window red. Tested with and without an explicit deg unit, both
+     fail. The palette therefore carries literal values.
+
+     A user selectable accent stays possible, but it has to be computed in
+     TypeScript and written out as finished colour values. That belongs with
+     the settings screen, see docs/milestones/M0.md. */
+  --accent-h: 265;
+  --accent-s: 72%;
+
+  /* ------------------------------------------------------------ typography */
+  --font-ui: "Inter", "Inter Variable", -apple-system, BlinkMacSystemFont,
+    "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Mono",
+    Consolas, monospace;
+
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-strong: 600;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --tracking-tight: -0.011em;
+  --tracking-wide: 0.04em;
+
+  /* ---------------------------------------------------------------- layout */
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 48px;
+  --space-9: 64px;
+
+  --radius-xs: 6px;
+  --radius-control: 9px;
+  --radius-panel: 14px;
+  --radius-surface: 18px;
+  --radius-pill: 999px;
+
+  --border-width: 1px;
+
+  /* Sidebar and panels. One number per role, so a compact mode only has to
+     change these. */
+  --sidebar-width: 268px;
+  --sidebar-width-collapsed: 0px;
+  --inspector-width: 296px;
+  --toolbar-height: 44px;
+  /* The smallest a touch target may ever be. */
+  --touch-target: 44px;
+
+  /* ---------------------------------------------------------------- motion */
+  --duration-instant: 90ms;
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 250ms;
+  /* A gentle overshoot. Calm, not playful. */
+  --ease-spring: cubic-bezier(0.22, 1.06, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* ------------------------------------------------------------- z ordering */
+  --z-canvas: 1;
+  --z-sidebar: 20;
+  --z-floating-toolbar: 40;
+  --z-inspector: 30;
+  --z-sheet: 60;
+  --z-palette: 80;
+  --z-toast: 90;
+}
+
+/* ------------------------------------------------------------- dark palette */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --accent: hsl(265 72% 66%);
+  --accent-strong: hsl(265 72% 72%);
+  --accent-muted: hsl(265 40% 26%);
+  --accent-contrast: hsl(265 60% 10%);
+  --accent-ring: hsl(265 72% 66% / 0.5);
+
+  /* The window background is a slow gradient, not a flat fill. */
+  --window-bg: hsl(265 22% 8%);
+  --window-gradient:
+    radial-gradient(120% 90% at 12% -10%, hsl(265 46% 22% / 0.65), transparent 62%),
+    radial-gradient(100% 80% at 100% 0%, hsl(305 42% 20% / 0.42), transparent 58%),
+    linear-gradient(180deg, hsl(265 20% 10%), hsl(265 24% 6%));
+
+  --surface: hsl(265 14% 13% / 0.72);
+  --surface-solid: hsl(265 14% 13%);
+  --surface-raised: hsl(265 14% 17% / 0.86);
+  --surface-sunken: hsl(265 18% 9% / 0.6);
+  --surface-hover: hsl(265 16% 24% / 0.55);
+  --surface-active: hsl(265 20% 28% / 0.72);
+
+  /* The page itself always stays paper coloured, in both themes. */
+  --page-bg: #ffffff;
+  --page-edge: hsl(265 10% 4% / 0.55);
+
+  --border: hsl(265 12% 100% / 0.09);
+  --border-strong: hsl(265 12% 100% / 0.16);
+
+  --text: hsl(265 16% 96%);
+  --text-muted: hsl(265 10% 96% / 0.62);
+  --text-faint: hsl(265 10% 96% / 0.4);
+  --text-on-accent: hsl(265 60% 10%);
+
+  --danger: hsl(2 74% 66%);
+  --warning: hsl(38 82% 64%);
+  --success: hsl(148 52% 58%);
+
+  --blur-panel: 22px;
+  --blur-sheet: 32px;
+
+  --shadow-soft: 0 1px 2px hsl(0 0% 0% / 0.28), 0 4px 14px hsl(0 0% 0% / 0.24);
+  --shadow-panel: 0 2px 6px hsl(0 0% 0% / 0.3), 0 18px 42px hsl(0 0% 0% / 0.38);
+  --shadow-page: 0 2px 8px hsl(0 0% 0% / 0.34), 0 24px 64px hsl(0 0% 0% / 0.44);
+  --shadow-inset: inset 0 1px 0 hsl(0 0% 100% / 0.05);
+}
+
+/* ------------------------------------------------------------ light palette */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --accent: hsl(265 62% 48%);
+  --accent-strong: hsl(265 64% 42%);
+  --accent-muted: hsl(265 70% 92%);
+  --accent-contrast: hsl(0 0% 100%);
+  --accent-ring: hsl(265 62% 48% / 0.35);
+
+  --window-bg: hsl(265 30% 97%);
+  --window-gradient:
+    radial-gradient(120% 90% at 10% -10%, hsl(265 70% 88% / 0.7), transparent 60%),
+    radial-gradient(100% 80% at 100% 0%, hsl(305 66% 90% / 0.5), transparent 58%),
+    linear-gradient(180deg, hsl(265 34% 98%), hsl(265 26% 93%));
+
+  --surface: hsl(0 0% 100% / 0.74);
+  --surface-solid: hsl(0 0% 100%);
+  --surface-raised: hsl(0 0% 100% / 0.9);
+  --surface-sunken: hsl(265 22% 92% / 0.6);
+  --surface-hover: hsl(265 30% 88% / 0.6);
+  --surface-active: hsl(265 34% 84% / 0.78);
+
+  --page-bg: #ffffff;
+  --page-edge: hsl(265 20% 40% / 0.22);
+
+  --border: hsl(265 20% 20% / 0.1);
+  --border-strong: hsl(265 20% 20% / 0.18);
+
+  --text: hsl(265 24% 14%);
+  --text-muted: hsl(265 14% 14% / 0.64);
+  --text-faint: hsl(265 14% 14% / 0.42);
+  --text-on-accent: hsl(0 0% 100%);
+
+  --danger: hsl(2 68% 48%);
+  --warning: hsl(32 78% 44%);
+  --success: hsl(148 46% 36%);
+
+  --blur-panel: 20px;
+  --blur-sheet: 30px;
+
+  --shadow-soft: 0 1px 2px hsl(265 20% 20% / 0.08), 0 4px 14px hsl(265 20% 20% / 0.08);
+  --shadow-panel: 0 2px 6px hsl(265 20% 20% / 0.08), 0 18px 42px hsl(265 20% 20% / 0.14);
+  --shadow-page: 0 2px 8px hsl(265 20% 20% / 0.1), 0 24px 64px hsl(265 20% 20% / 0.18);
+  --shadow-inset: inset 0 1px 0 hsl(0 0% 100% / 0.7);
+}
+
+/* Follow the system unless the user picked a theme explicitly. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+
+    --accent: hsl(265 62% 48%);
+    --accent-strong: hsl(265 64% 42%);
+    --accent-muted: hsl(265 70% 92%);
+    --accent-contrast: hsl(0 0% 100%);
+    --accent-ring: hsl(265 62% 48% / 0.35);
+
+    --window-bg: hsl(265 30% 97%);
+    --window-gradient:
+      radial-gradient(120% 90% at 10% -10%, hsl(265 70% 88% / 0.7), transparent 60%),
+      radial-gradient(100% 80% at 100% 0%, hsl(305 66% 90% / 0.5), transparent 58%),
+      linear-gradient(180deg, hsl(265 34% 98%), hsl(265 26% 93%));
+
+    --surface: hsl(0 0% 100% / 0.74);
+    --surface-solid: hsl(0 0% 100%);
+    --surface-raised: hsl(0 0% 100% / 0.9);
+    --surface-sunken: hsl(265 22% 92% / 0.6);
+    --surface-hover: hsl(265 30% 88% / 0.6);
+    --surface-active: hsl(265 34% 84% / 0.78);
+
+    --page-edge: hsl(265 20% 40% / 0.22);
+
+    --border: hsl(265 20% 20% / 0.1);
+    --border-strong: hsl(265 20% 20% / 0.18);
+
+    --text: hsl(265 24% 14%);
+    --text-muted: hsl(265 14% 14% / 0.64);
+    --text-faint: hsl(265 14% 14% / 0.42);
+    --text-on-accent: hsl(0 0% 100%);
+
+    --danger: hsl(2 68% 48%);
+    --warning: hsl(32 78% 44%);
+    --success: hsl(148 46% 36%);
+
+    --shadow-soft: 0 1px 2px hsl(265 20% 20% / 0.08), 0 4px 14px hsl(265 20% 20% / 0.08);
+    --shadow-panel: 0 2px 6px hsl(265 20% 20% / 0.08), 0 18px 42px hsl(265 20% 20% / 0.14);
+    --shadow-page: 0 2px 8px hsl(265 20% 20% / 0.1), 0 24px 64px hsl(265 20% 20% / 0.18);
+    --shadow-inset: inset 0 1px 0 hsl(0 0% 100% / 0.7);
+  }
+}
+
+/* Touch layout. One set of breakpoints decides, never the platform, so a narrow
+   window on Windows behaves like a tablet. */
+@media (pointer: coarse) {
+  :root {
+    --touch-target: 48px;
+    --radius-control: 12px;
+    --space-3: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 1ms;
+    --duration-fast: 1ms;
+    --duration-base: 1ms;
+    --duration-slow: 1ms;
+  }
+}
