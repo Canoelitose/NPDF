@@ -86,18 +86,26 @@ jobs:
             pdfium: windows-x64
             bundles: msi,nsis
     steps:
-      # First step on purpose. A Mac that falls asleep mid build takes the
-      # runner with it and the job dies without a log. That happened while
-      # setup-node was still running, so a wakelock placed further down never
-      # got the chance to take hold. `-w $PPID` ties it to the runner process,
-      # so it ends when the job ends, however it ends.
+      # First step on purpose. A Mac that goes idle mid build stops talking to
+      # GitHub, and after ten minutes of silence GitHub cancels the job. The
+      # build itself carries on locally and only learns of the cancellation
+      # when the machine comes back, which is why the logs end mid compile with
+      # nothing but "The operation was canceled".
+      #
+      # `-w $PPID` ties the assertion to the runner process, so it ends when
+      # the job ends, however it ends.
       #
       # This only covers the build itself. A Mac idling between jobs can still
       # fall asleep and drop off, which leaves jobs queued forever, so the
       # machine has to be kept awake too. See scripts/runner/setup-macos.sh.
       - name: Den Mac wach halten, solange er baut
         if: matrix.label == 'macOS'
-        run: caffeinate -dimsu -w $PPID &
+        run: |
+          # -u would cap the assertion at five seconds, which is exactly what
+          # happened. -w keeps it alive for the whole job instead. Redirecting
+          # the output lets the step finish at once, otherwise it waits for the
+          # pipes to close, which means waiting for caffeinate itself.
+          nohup caffeinate -dims -w $PPID >/dev/null 2>&1 &
 
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
@@ -207,10 +215,15 @@ jobs:
     runs-on: ${{ vars.MACOS_RUNNER || 'macos-latest' }}
     steps:
       # First step on purpose, same reason as in the desktop job: this job
-      # always runs on a Mac, and a Mac that falls asleep takes the runner with
-      # it and the job dies without a log.
+      # always runs on a Mac, and an idle Mac stops talking to GitHub, which
+      # cancels the job after ten minutes of silence.
       - name: Den Mac wach halten, solange er baut
-        run: caffeinate -dimsu -w $PPID &
+        run: |
+          # -u would cap the assertion at five seconds, which is exactly what
+          # happened. -w keeps it alive for the whole job instead. Redirecting
+          # the output lets the step finish at once, otherwise it waits for the
+          # pipes to close, which means waiting for caffeinate itself.
+          nohup caffeinate -dims -w $PPID >/dev/null 2>&1 &
 
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable

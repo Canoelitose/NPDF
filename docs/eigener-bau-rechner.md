@@ -76,11 +76,12 @@ teuersten fehlt: `linuxdeploy` ist selbst ein AppImage und braucht FUSE, das
 AppImage scheitert also als letztes Buendel nach dem ganzen Uebersetzen. Heisst
 es auf deiner Ausgabe nicht so, ist es `libfuse2t64`.
 
-**macOS.** Ein Mac, der beim Bauen einschlaeft, nimmt den Runner mit. Der
-Auftrag scheitert dann ohne Protokoll, weil niemand mehr da ist, der eines
-hochladen koennte. Der Workflow haelt den Mac deshalb fuer die Dauer des
-Auftrags wach, mit `caffeinate -dimsu -w $PPID`. Das haengt am Runner-Prozess
-selbst und endet mit dem Auftrag, egal wie er endet.
+**macOS.** Ein Mac, der beim Bauen in den Leerlauf geht, hoert auf, mit GitHub
+zu reden. Nach zehn Minuten Funkstille bricht GitHub den Auftrag ab. Der Bau
+laeuft oertlich weiter und erfaehrt davon erst, wenn die Maschine
+zurueckkommt. Der Workflow haelt den Mac deshalb fuer die Dauer des Auftrags
+wach, mit `caffeinate -dims -w $PPID`. Das haengt am Runner-Prozess selbst und
+endet mit dem Auftrag, egal wie er endet.
 
 **Windows.** Lange Pfade einschalten, sonst laufen Rust und `node_modules`
 gegen die alte Grenze von 260 Zeichen. Dazu eine Defender-Ausnahme fuer das
@@ -94,24 +95,35 @@ Die Variable allein beweist nichts. Erst wenn ein Lauf auf dem eigenen Runner
 durchgelaufen ist und seine Installationsdatei als Artefakt haengt, ist die
 Sache fertig. Unter Actions steht am Auftrag, welche Maschine ihn genommen hat.
 
-## Der Mac darf nicht einschlafen
+## Der Mac darf nicht in den Leerlauf gehen
 
-Das ist kein Schoenheitsfehler, es kostet ganze Laeufe. Zweimal beobachtet:
+Das ist kein Schoenheitsfehler, es kostet ganze Laeufe. Zwei Auspraegungen:
 
 * **Zwischen Jobs.** Schlaeft der Mac im Leerlauf ein, meldet sich der Runner ab
   und wartende Jobs bleiben in der Warteschlange stehen, ohne Fehler, ohne Ende.
-* **Waehrend eines Jobs.** Der Runner geht mit schlafen, der Job stirbt mitten im
-  Schritt, alle Folgeschritte bleiben auf `pending` und es gibt kein Protokoll.
-  Genau das passierte am 27. August um 23:33 Uhr, nach exakt zehn Minuten, waehrend
-  `setup-node` lief.
+* **Waehrend eines Jobs.** Die Verbindung reisst ab, GitHub sieht zehn Minuten
+  lang nichts mehr und bricht den Auftrag ab. Woran man es erkennt: der Auftrag
+  ist nach exakt zehn Minuten zu Ende, das Protokoll bricht mitten im
+  Uebersetzen ab und endet mit `The operation was canceled`, ohne dass davor ein
+  Fehler steht.
 
 Zwei Massnahmen, beide noetig:
 
     sudo pmset -a sleep 0 disksleep 0
 
 erledigt der Einrichtungsschritt in `scripts/runner/setup-macos.sh` mit. Und im
-Workflow steht `caffeinate -dimsu -w $PPID` als **erster** Schritt des Jobs.
-Weiter unten nuetzt es nichts, dann kann der Rechner vorher einschlafen.
+Workflow steht der Wachhalter als **erster** Schritt des Jobs. Weiter unten
+nuetzt es nichts, dann kann der Rechner vorher wegdriften.
+
+Auf den Aufruf kommt es dabei an:
+
+    nohup caffeinate -dims -w $PPID >/dev/null 2>&1 &
+
+Ohne `-u`. Das Kennzeichen erklaert den Benutzer fuer aktiv, aber ohne `-t` nur
+fuenf Sekunden lang, danach beendet sich `caffeinate` und der Schutz ist weg.
+Zu erkennen war das daran, dass der Schritt genau fuenf Sekunden brauchte statt
+sofort fertig zu sein. Die Umleitung sorgt dafuer, dass der Schritt nicht auf
+das Schliessen der Ausgabekanaele wartet.
 
 Wenn du den Ruhezustand wieder willst:
 

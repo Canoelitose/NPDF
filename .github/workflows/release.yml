@@ -74,18 +74,26 @@ jobs:
             bundles: appimage,deb
 
     steps:
-      # First step on purpose. A Mac that falls asleep mid build takes the
-      # runner with it and the job dies without a log. That happened while
-      # setup-node was still running, so a wakelock placed further down never
-      # got the chance to take hold. `-w $PPID` ties it to the runner process,
-      # so it ends when the job ends, however it ends.
+      # First step on purpose. A Mac that goes idle mid build stops talking to
+      # GitHub, and after ten minutes of silence GitHub cancels the job. The
+      # build itself carries on locally and only learns of the cancellation
+      # when the machine comes back, which is why the logs end mid compile with
+      # nothing but "The operation was canceled".
+      #
+      # `-w $PPID` ties the assertion to the runner process, so it ends when
+      # the job ends, however it ends.
       #
       # This only covers the build itself. A Mac idling between jobs can still
       # fall asleep and drop off, which leaves jobs queued forever, so the
       # machine has to be kept awake too. See scripts/runner/setup-macos.sh.
       - name: Den Mac wach halten, solange er baut
         if: matrix.pdfium == 'macos-universal'
-        run: caffeinate -dimsu -w $PPID &
+        run: |
+          # -u would cap the assertion at five seconds, which is exactly what
+          # happened. -w keeps it alive for the whole job instead. Redirecting
+          # the output lets the step finish at once, otherwise it waits for the
+          # pipes to close, which means waiting for caffeinate itself.
+          nohup caffeinate -dims -w $PPID >/dev/null 2>&1 &
 
       - uses: actions/checkout@v5
 
