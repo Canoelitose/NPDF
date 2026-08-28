@@ -206,6 +206,12 @@ jobs:
     needs: [core, frontend]
     runs-on: ${{ vars.MACOS_RUNNER || 'macos-latest' }}
     steps:
+      # First step on purpose, same reason as in the desktop job: this job
+      # always runs on a Mac, and a Mac that falls asleep takes the runner with
+      # it and the job dies without a log.
+      - name: Den Mac wach halten, solange er baut
+        run: caffeinate -dimsu -w $PPID &
+
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
         with:
